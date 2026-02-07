@@ -1,0 +1,21 @@
+[project]
+name = "quantifying-the-illicit-ecosystem-of-betting-apps-in-india"
+version = "0.1.0"
+description = "data and code repository for our work on quantifying the ecosystem of betting apps in India"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+	"fastapi>=0.118.0",
+	"uvicorn>=0.37.0",
+	"pydantic>=2.12.3",
+	"python-dotenv>=1.1.0",
+	"google-genai>=1.32.0",
+	"tqdm>=4.67.1",
+	"pandas>=2.3.1",
+	"google-play-scraper>=1.2.7",
+	"requests>=2.32.4",
+	"PyYAML>=6.0.3",
+	"ijson>=3.4.0",
+	"selenium>=4.34.0",
+    "ruff>=0.12.0"
+]
