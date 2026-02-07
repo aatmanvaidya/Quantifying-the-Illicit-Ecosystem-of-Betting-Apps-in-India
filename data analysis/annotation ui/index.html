@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gambling Ad Annotation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .progress-container {
+            max-width: 1400px;
+            margin: 0 auto 20px auto;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #progress-text {
+            text-align: center;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        #progress-bar-inner {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745;
+            border-radius: 8px;
+            transition: width 0.4s ease;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: auto;
+            height: calc(100vh - 125px);
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .form-content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .media-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .media-container img,
+        .media-container video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+
+        .ad-info h2 {
+            color: #555;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .ad-info p {
+            margin: 10px 0;
+        }
+
+        .ad-info strong {
+            color: #000;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .submit-button-container {
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            background-color: #fff;
+        }
+
+        #submit-btn {
+            background-color: #28a745;
+            color: white;
+            width: 100%;
+            margin-top: 0;
+        }
+
+        #submit-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .form-section h3 {
+            margin-top: 0;
+            color: #444;
+        }
+
+        .form-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-section select,
+        .form-section textarea,
+        .form-section input[type="text"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .radio-group label,
+        .checkbox-group label {
+            display: block;
+            font-weight: normal;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .radio-group input,
+        .checkbox-group input {
+            margin-right: 8px;
+        }
+
+        #app-name-group,
+        #ad-category-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .other-input {
+            display: none;
+            margin-top: 5px;
+        }
+
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        #annotation-fields-wrapper.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        #preset-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 8px 15px;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .preset-btn.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+
+        .shortcut-badge {
+            font-size: 0.8em;
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+        }
+
+        .preset-btn.active .shortcut-badge {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .mode-indicator {
+            background-color: #ffc107;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* --- NEW FILTER MODAL STYLES --- */
+        #filter-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .filter-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 450px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .filter-box h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            color: #007bff;
+        }
+
+        .filter-box select,
+        .filter-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .filter-box label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="filter-modal" style="display: none;">
+        <div class="filter-box">
+            <h2>Select Data to Review</h2>
+
+            <label>Question (Column):</label>
+            <select id="filter-column">
+                <option value="media_authenticity">Media Authenticity</option>
+                <option value="ad_category">Ad Category</option>
+                <option value="app_name">App Name</option>
+                <option value="is_spam">Is Spam</option>
+                <option value="sexual_content">Sexual Content</option>
+            </select>
+
+            <label>Value to find:</label>
+            <select id="filter-value">
+            </select>
+
+            <button id="start-filter-btn" class="nav-btn" style="width: 100%; padding: 12px; font-weight: bold;">Load
+                Items</button>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <span id="progress-text">Loading...</span>
+        <div class="progress-bar">
+            <div id="progress-bar-inner"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <h2 id="current-file-name"></h2>
+            <div class="ad-info">
+                <p><strong>ID:</strong> <span id="ad-id"></span></p>
+                <p><strong>Ad Snapshot URL:</strong> <a id="ad-url" href="#" target="_blank">View Ad</a></p>
+                <p><strong>Ad Creative Bodies:</strong> <span id="ad-body"></span></p>
+            </div>
+            <div id="status-message" class="status-message" style="display: none;"></div>
+            <div class="media-container">
+                <img id="media-preview-image" src="" alt="Ad Media Image" style="display:none;">
+                <video id="media-preview-video" controls muted loop autoplay style="display:none;"></video>
+            </div>
+            <div class="controls">
+                <button id="prev-btn" class="nav-btn">Previous</button>
+                <button id="next-btn" class="nav-btn">Next</button>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="form-content-wrapper">
+                <h2 id="annotation-heading">Annotation Form</h2>
+                <div id="preset-selector"></div>
+
+                <div class="form-section">
+                    <h3>Is Spam</h3>
+                    <div class="radio-group">
+                        <label><input type="radio" name="is_spam" value="True"> True</label>
+                        <label><input type="radio" name="is_spam" value="False"> False</label>
+                    </div>
+                </div>
+
+                <div id="annotation-fields-wrapper">
+                    <div class="form-section">
+                        <h3>1. Ad Category</h3>
+                        <div class="checkbox-group" id="ad-category-group">
+                            <label><input type="checkbox" name="ad_category" value="Sports Betting"> Sports
+                                Betting</label>
+                            <label><input type="checkbox" name="ad_category" value="Fantasy Sports"> Fantasy
+                                Sports</label>
+                            <label><input type="checkbox" name="ad_category" value="Casino Games"> Casino Games</label>
+                            <label><input type="checkbox" name="ad_category" value="Card Games"> Card Games</label>
+                            <label><input type="checkbox" name="ad_category" value="Prediction Games"> Prediction
+                                Games</label>
+                            <label><input type="checkbox" name="ad_category" value="Lottery / Jackpots"> Lottery /
+                                Jackpots</label>
+                            <label><input type="checkbox" name="ad_category" value="Trading / Crypto"> Trading /
+                                Crypto</label>
+                            <label><input type="checkbox" name="ad_category" value="Other"> Other</label>
+                            <div class="other-input" id="ad-category-other-wrapper">
+                                <input type="text" id="ad-category-other" placeholder="Please specify">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>2. App Name</h3>
+                        <div class="checkbox-group" id="app-name-group">
+                            <label><input type="checkbox" name="app_name" value="Parimatch"> Parimatch</label>
+                            <label><input type="checkbox" name="app_name" value="Betway"> Betway</label>
+                            <label><input type="checkbox" name="app_name" value="1xBet"> 1xBet</label>
+                            <label><input type="checkbox" name="app_name" value="22Bet"> 22Bet</label>
+                            <label><input type="checkbox" name="app_name" value="20Bet"> 20Bet</label>
+                            <label><input type="checkbox" name="app_name" value="Stake"> Stake</label>
+                            <label><input type="checkbox" name="app_name" value="Junglee Rummy"> Junglee Rummy</label>
+                            <label><input type="checkbox" name="app_name" value="Aviator"> Aviator</label>
+                            <label><input type="checkbox" name="app_name" value="Bet365"> Bet365</label>
+                            <label><input type="checkbox" name="app_name" value="Lucky Casino"> Lucky Casino</label>
+                            <label><input type="checkbox" name="app_name" value="91Club"> 91Club</label>
+                            <label><input type="checkbox" name="app_name" value="Melbet"> Melbet</label>
+                            <label><input type="checkbox" name="app_name" value="Sportsbet_io"> Sportsbet_io</label>
+                            <label><input type="checkbox" name="app_name" value="Dafabet"> Dafabet</label>
+                            <label><input type="checkbox" name="app_name" value="PokerStars"> PokerStars</label>
+                            <label><input type="checkbox" name="app_name" value="Megapari"> Megapari</label>
+                            <label><input type="checkbox" name="app_name" value="Roobet"> Roobet</label>
+                            <label><input type="checkbox" name="app_name" value="Jackpot City Casino"> Jackpot City
+                                Casino</label>
+                            <label><input type="checkbox" name="app_name" value="1win"> 1win</label>
+                            <label><input type="checkbox" name="app_name" value="BC Game"> BC Game</label>
+                            <label><input type="checkbox" name="app_name" value="Other"> Other</label>
+                            <div class="other-input" id="app-name-other-wrapper">
+                                <input type="text" id="app-name-other" placeholder="Please specify">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>3. Primary Messaging Strategy</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="primary_messaging_strategy" value="User Acquisition">
+                                User Acquisition</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy"
+                                    value="Promoting a New Feature"> Promoting a New Feature</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy"
+                                    value="Celebrity Endorsement"> Celebrity Endorsement</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy"
+                                    value="Misleading or Deceptive"> Misleading or Deceptive</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy" value="Emotional Appeal">
+                                Emotional Appeal</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy"
+                                    value="Social Proof / Testimonials"> Social Proof / Testimonials</label>
+                            <label><input type="checkbox" name="primary_messaging_strategy" value="General Promotion">
+                                General Promotion</label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>4. Potentially Harmful Narratives</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Easy Money Narrative"> Easy Money Narrative</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Risk Minimization"> Risk Minimization</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Income Source Framing"> Income Source Framing</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Addiction Normalization"> Addiction Normalization</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Debt Solution Marketing"> Debt Solution Marketing</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Success Story Manipulation"> Success Story Manipulation</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives"
+                                    value="Time Pressure Tactics"> Time Pressure Tactics</label>
+                            <label><input type="checkbox" name="potentially_harmful_narratives" value="Other">
+                                Other</label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>5. Media Authenticity & Manipulation</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="media_authenticity" value="Authentic"> Authentic</label>
+                            <label><input type="checkbox" name="media_authenticity" value="Manipulated">
+                                Manipulated</label>
+                            <label><input type="checkbox" name="media_authenticity"
+                                    value="AI-Generated (Synthetic Media)"> AI-Generated (Synthetic Media)</label>
+                            <label><input type="checkbox" name="media_authenticity" value="Deepfake (Celebrity)">
+                                Deepfake (Celebrity)</label>
+                            <label><input type="checkbox" name="media_authenticity" value="Deepfake (Non-Celebrity)">
+                                Deepfake (Non-Celebrity)</label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>6. Sexual content</h3>
+                        <div class="radio-group">
+                            <label><input type="radio" name="sexual_content" value="Yes"> Yes</label>
+                            <label><input type="radio" name="sexual_content" value="No"> No</label>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>7. Ad Notes (Optional Text Field)</h3>
+                        <textarea id="ad-notes" rows="4" placeholder="Add any additional notes here..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="submit-button-container">
+                <button id="submit-btn">Submit Annotation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        let JSON_FILE_NAME = "/path/to/meta ads file name"; // Default, checks localStorage or URL params
+        const MEDIA_FOLDER = "/path/to/meta ads/media downloaded folder";
+        const MAX_BODY_LENGTH = 850;
+
+        // --- MODES ---
+        const IS_REMAINING_MODE = window.location.pathname.includes('/remaining');
+        const IS_FILTER_MODE = window.location.pathname.includes('/filter');
+
+        const PRESET_DEFAULTS = {
+            'none': {},
+            'spam': { 'is_spam': 'True' },
+            'sport other': {
+                'is_spam': 'False', 'ad_category': ['Sports Betting'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Social Proof / Testimonials'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'sport bet365': {
+                'is_spam': 'False', 'ad_category': ['Sports Betting'], 'app_name': ['Bet365'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Social Proof / Testimonials'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Income Source Framing'],
+                'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'aviator celeb': {
+                'is_spam': 'False', 'ad_category': ['Prediction Games'], 'app_name': ['Aviator'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Misleading or Deceptive', 'Celebrity Endorsement'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Income Source Framing'],
+                'media_authenticity': ['Deepfake (Celebrity)'], 'sexual_content': 'No'
+            },
+            'casino': {
+                'is_spam': 'False', 'ad_category': ['Casino Games'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Misleading or Deceptive', 'Social Proof / Testimonials'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'trading': {
+                'is_spam': 'False', 'ad_category': ['Trading / Crypto'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Misleading or Deceptive'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Income Source Framing'],
+                'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'poker': {
+                'is_spam': 'False', 'ad_category': ['Casino Games', 'Card Games', 'Lottery / Jackpots'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Social Proof / Testimonials'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'stake': {
+                'is_spam': 'False', 'ad_category': ['Casino Games', 'Card Games', 'Lottery / Jackpots'], 'app_name': ['Stake'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Misleading or Deceptive', 'Social Proof / Testimonials'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'bc game': {
+                'is_spam': 'False', 'ad_category': ['Prediction Games', 'Lottery / Jackpots', 'Casino Games'], 'app_name': ['BC Game'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'Misleading or Deceptive'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'card games': {
+                'is_spam': 'False', 'ad_category': ['Card Games'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'General Promotion'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization'], 'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'aviator': {
+                'is_spam': 'False', 'ad_category': ['Prediction Games'], 'app_name': ['Aviator'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'General Promotion'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Debt Solution Marketing', 'Success Story Manipulation'],
+                'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            '1xbet': {
+                'is_spam': 'False', 'ad_category': ['Sports Betting'], 'app_name': ['1xBet'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Income Source Framing'],
+                'media_authenticity': ['Authentic'], 'sexual_content': 'No'
+            },
+            'other manipulated': {
+                'is_spam': 'False', 'ad_category': ['Other'], 'app_name': ['Other'],
+                'primary_messaging_strategy': ['User Acquisition', 'Promoting a New Feature', 'General Promotion'],
+                'potentially_harmful_narratives': ['Easy Money Narrative', 'Risk Minimization', 'Income Source Framing'],
+                'media_authenticity': ['Manipulated'], 'sexual_content': 'Yes'
+            }
+        };
+
+        let activePresetName = localStorage.getItem('activePresetName') || 'None';
+        let jsonData = [];
+        let currentItemIndex = 0;
+        let existingAnnotations = {};
+
+        // Keyboard shortcuts variables
+        let presetShortcuts = {};
+        let totalPresets = 0;
+        let shortcutKeyBuffer = "";
+        let shortcutTimer = null;
+
+        const adIdEl = document.getElementById('ad-id');
+        const adUrlEl = document.getElementById('ad-url');
+        const adBodyEl = document.getElementById('ad-body');
+        const mediaPreviewImageEl = document.getElementById('media-preview-image');
+        const mediaPreviewVideoEl = document.getElementById('media-preview-video');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusMessageEl = document.getElementById('status-message');
+        const currentFileNameEl = document.getElementById('current-file-name');
+        const annotationFieldsWrapper = document.getElementById('annotation-fields-wrapper');
+        const presetSelector = document.getElementById('preset-selector');
+
+        // --- FILTER MODE LOGIC ---
+        const filterModal = document.getElementById('filter-modal');
+        const filterColumn = document.getElementById('filter-column');
+        const filterValue = document.getElementById('filter-value');
+        const startFilterBtn = document.getElementById('start-filter-btn');
+
+        const FILTER_OPTIONS = {
+            'media_authenticity': ['Manipulated', 'Authentic', 'AI-Generated (Synthetic Media)', 'Deepfake (Celebrity)', 'Deepfake (Non-Celebrity)'],
+            'is_spam': ['True', 'False'],
+            'ad_category': ['Sports Betting', 'Casino Games', 'Trading / Crypto', 'Prediction Games', 'Other'],
+            'app_name': ['Aviator', '1xBet', 'Stake', 'Parimatch', 'Other'],
+            'sexual_content': ['Yes', 'No']
+        };
+
+        function initFilterMode() {
+            filterModal.style.display = 'flex';
+
+            filterColumn.addEventListener('change', () => {
+                const col = filterColumn.value;
+                filterValue.innerHTML = '';
+                if (FILTER_OPTIONS[col]) {
+                    FILTER_OPTIONS[col].forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        filterValue.appendChild(option);
+                    });
+                }
+            });
+            // Trigger change once to populate default
+            filterColumn.dispatchEvent(new Event('change'));
+
+            startFilterBtn.addEventListener('click', async () => {
+                const col = filterColumn.value;
+                const val = filterValue.value;
+
+                startFilterBtn.textContent = "Searching...";
+                startFilterBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/api/query_annotations', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ field_name: col, field_value: val })
+                    });
+
+                    if (!response.ok) throw new Error("Search failed");
+
+                    const data = await response.json();
+
+                    if (data.length === 0) {
+                        alert("No items found matching that criteria.");
+                        startFilterBtn.textContent = "Load Items";
+                        startFilterBtn.disabled = false;
+                        return;
+                    }
+
+                    jsonData = data;
+                    currentItemIndex = 0;
+                    filterModal.style.display = 'none';
+                    currentFileNameEl.innerHTML = `Reviewing: <strong>${col} = ${val}</strong> (${data.length} items found)`;
+                    displayCurrentItem();
+
+                } catch (e) {
+                    alert("Error: " + e.message);
+                    startFilterBtn.textContent = "Load Items";
+                    startFilterBtn.disabled = false;
+                }
+            });
+        }
+
+        function generatePresetButtons() {
+            presetSelector.innerHTML = '';
+            presetShortcuts = {};
+            let index = 1;
+
+            for (const presetName in PRESET_DEFAULTS) {
+                const button = document.createElement('button');
+                const badge = document.createElement('span');
+                badge.className = 'shortcut-badge';
+                badge.textContent = index;
+                button.appendChild(badge);
+                button.appendChild(document.createTextNode(presetName));
+
+                button.className = 'preset-btn';
+                button.dataset.preset = presetName;
+                if (presetName === activePresetName) button.classList.add('active');
+
+                presetShortcuts[index] = presetName;
+                presetSelector.appendChild(button);
+                index++;
+            }
+            totalPresets = index - 1;
+        }
+
+        function triggerPreset(presetName) {
+            activePresetName = presetName;
+            localStorage.setItem('activePresetName', activePresetName);
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                if (btn.dataset.preset === presetName) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            const item = jsonData[currentItemIndex];
+            if (item) {
+                resetForm();
+                applyDefaults();
+                displayMessage(`Preset '${presetName}' applied.`, 'success');
+            }
+        }
+
+        presetSelector.addEventListener('click', (event) => {
+            const button = event.target.closest('.preset-btn');
+            if (!button) return;
+            triggerPreset(button.dataset.preset);
+        });
+
+        function toggleAnnotationFields(disabled) {
+            if (disabled) annotationFieldsWrapper.classList.add('disabled');
+            else annotationFieldsWrapper.classList.remove('disabled');
+            annotationFieldsWrapper.querySelectorAll('input, textarea').forEach(input => input.disabled = disabled);
+        }
+
+        document.querySelectorAll('input[name="is_spam"]').forEach(radio => {
+            radio.addEventListener('change', (event) => toggleAnnotationFields(event.target.value === 'True'));
+        });
+
+        function setupOtherFieldListener(groupName, otherWrapperId) {
+            const otherCheckbox = document.querySelector(`input[name="${groupName}"][value="Other"]`);
+            const otherWrapper = document.getElementById(otherWrapperId);
+            otherCheckbox.addEventListener('change', () => otherWrapper.style.display = otherCheckbox.checked ? 'block' : 'none');
+        }
+        setupOtherFieldListener('ad_category', 'ad-category-other-wrapper');
+        setupOtherFieldListener('app_name', 'app-name-other-wrapper');
+
+        function updateProgressBar() {
+            if (jsonData.length === 0) return;
+            const progressPercentage = ((currentItemIndex + 1) / jsonData.length) * 100;
+            const modeText = IS_FILTER_MODE ? 'Review Item' : (IS_REMAINING_MODE ? 'Remaining Item' : 'Item');
+            document.getElementById('progress-text').textContent = `${modeText} ${currentItemIndex + 1} of ${jsonData.length}`;
+            document.getElementById('progress-bar-inner').style.width = `${progressPercentage}%`;
+        }
+
+        async function fetchSingleItemData(itemId, jsonFile) {
+            JSON_FILE_NAME = jsonFile;
+            try {
+                const response = await fetch(`/api/get_item_by_id?item_id=${itemId}&json_file=${jsonFile}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                jsonData = await response.json();
+                await fetchExistingAnnotations();
+                if (jsonData.length > 0) {
+                    currentItemIndex = 0;
+                    currentFileNameEl.textContent = `Annotating single item from: ${JSON_FILE_NAME}`;
+                    displayCurrentItem();
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+                }
+            } catch (error) { displayMessage(`Failed to load item ${itemId}.`, 'error'); }
+        }
+
+        async function fetchAllItemsData() {
+            try {
+                const endpoint = IS_REMAINING_MODE ? '/api/get_remaining_data' : '/api/get_data';
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ json_file: JSON_FILE_NAME })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                jsonData = await response.json();
+
+                if (!IS_REMAINING_MODE) {
+                    await fetchExistingAnnotations();
+                }
+
+                if (jsonData.length > 0) {
+                    if (IS_REMAINING_MODE) {
+                        currentItemIndex = 0;
+                        currentFileNameEl.innerHTML = `Annotating: ${JSON_FILE_NAME} <span class="mode-indicator">Remaining Mode</span>`;
+                    } else {
+                        const storageKey = `lastAnnotationIndex_${JSON_FILE_NAME}`;
+                        const savedIndex = parseInt(localStorage.getItem(storageKey), 10);
+                        currentItemIndex = (!isNaN(savedIndex) && savedIndex < jsonData.length) ? savedIndex : 0;
+                        currentFileNameEl.textContent = `Annotating: ${JSON_FILE_NAME}`;
+                    }
+                    displayCurrentItem();
+                } else {
+                    if (IS_REMAINING_MODE) {
+                        currentFileNameEl.innerHTML = `Annotating: ${JSON_FILE_NAME} <span class="mode-indicator">Remaining Mode</span>`;
+                        displayMessage("All items in this file have been annotated! 🎉", "success");
+                        adBodyEl.textContent = "";
+                        adIdEl.textContent = "";
+                        adUrlEl.style.display = "none";
+                        document.querySelector('.right-panel').style.display = 'none';
+                        prevBtn.disabled = true;
+                        nextBtn.disabled = true;
+                    }
+                }
+            } catch (error) { displayMessage('Failed to load data.', 'error'); }
+        }
+
+        async function fetchExistingAnnotations() {
+            try {
+                const response = await fetch(`/api/get_annotations?json_file=${JSON_FILE_NAME}`);
+                if (response.ok) existingAnnotations = await response.json();
+            } catch (error) { console.error('Error fetching annotations:', error); }
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => input.checked = false);
+            document.querySelectorAll('textarea, input[type="text"]').forEach(input => input.value = '');
+            document.querySelectorAll('.other-input').forEach(el => el.style.display = 'none');
+        }
+
+        function applyDefaults() {
+            const defaults = PRESET_DEFAULTS[activePresetName] || {};
+            for (const name in defaults) {
+                const value = defaults[name];
+                if (Array.isArray(value)) {
+                    value.forEach(valStr => {
+                        const checkbox = document.querySelector(`input[name="${name}"][value="${valStr}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                } else {
+                    const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                    if (radio) radio.checked = true;
+                }
+            }
+            const spamValue = document.querySelector('input[name="is_spam"]:checked')?.value;
+            toggleAnnotationFields(spamValue === 'True');
+
+            if (document.querySelector('input[name="ad_category"][value="Other"]')?.checked)
+                document.getElementById('ad-category-other-wrapper').style.display = 'block';
+            if (document.querySelector('input[name="app_name"][value="Other"]')?.checked)
+                document.getElementById('app-name-other-wrapper').style.display = 'block';
+        }
+
+        function prefillForm(annotation) {
+            resetForm();
+            const spamRadio = document.querySelector(`input[name="is_spam"][value="${annotation.is_spam}"]`);
+            if (spamRadio) { spamRadio.checked = true; toggleAnnotationFields(annotation.is_spam === 'True'); }
+
+            const sexualRadio = document.querySelector(`input[name="sexual_content"][value="${annotation.sexual_content}"]`);
+            if (sexualRadio) sexualRadio.checked = true;
+
+            ['ad_category', 'app_name', 'primary_messaging_strategy', 'potentially_harmful_narratives', 'media_authenticity'].forEach(name => {
+                const values = (annotation[name] || '').split(';');
+                values.forEach(value => {
+                    const checkbox = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            });
+
+            if ((annotation.ad_category || '').includes('Other')) {
+                document.getElementById('ad-category-other-wrapper').style.display = 'block';
+                document.getElementById('ad-category-other').value = annotation.ad_category_other || '';
+            }
+            if ((annotation.app_name || '').includes('Other')) {
+                document.getElementById('app-name-other-wrapper').style.display = 'block';
+                document.getElementById('app-name-other').value = annotation.app_name_other || '';
+            }
+            document.getElementById('ad-notes').value = annotation.ad_notes || '';
+        }
+
+        function displayCurrentItem() {
+            if (jsonData.length === 0) return;
+            const item = jsonData[currentItemIndex];
+            adIdEl.textContent = item.id;
+            adUrlEl.style.display = "inline";
+            adUrlEl.href = item.ad_snapshot_url;
+            const bodyText = (item.ad_creative_bodies && item.ad_creative_bodies[0]) || 'N/A';
+            adBodyEl.textContent = bodyText.substring(0, MAX_BODY_LENGTH) + (bodyText.length > MAX_BODY_LENGTH ? '...' : '');
+
+            // Determine Media Path Logic
+            // In Filter mode, the item object knows its own JSON file source
+            const sourceFile = item.jsonFileName || JSON_FILE_NAME;
+            const mediaSubfolder = sourceFile.replace('.json', '');
+
+            const mediaPath = `${MEDIA_FOLDER}/${mediaSubfolder}/${item.id}.${item.media_type === 'image' ? 'png' : 'mp4'}`;
+            mediaPreviewImageEl.style.display = 'none';
+            mediaPreviewVideoEl.style.display = 'none';
+
+            if (item.media_type === 'image') { mediaPreviewImageEl.src = mediaPath; mediaPreviewImageEl.style.display = 'block'; }
+            else { mediaPreviewVideoEl.src = mediaPath; mediaPreviewVideoEl.style.display = 'block'; mediaPreviewVideoEl.load(); mediaPreviewVideoEl.play(); }
+
+            updateProgressBar();
+
+            // Annotation Loading Logic
+            let annotationToLoad = null;
+
+            if (IS_FILTER_MODE) {
+                // In filter mode, server attaches existing data to the item object
+                if (item.existing_annotation) annotationToLoad = item.existing_annotation;
+            } else {
+                // In normal mode, we look it up in our global map
+                annotationToLoad = existingAnnotations[item.id];
+            }
+
+            if (IS_REMAINING_MODE) {
+                // Remaining mode implies not annotated yet
+                displayMessage('', '');
+                resetForm();
+                applyDefaults();
+            } else if (annotationToLoad) {
+                // We have data (either Filter mode or standard overwrite)
+                displayMessage(IS_FILTER_MODE ? 'Reviewing existing annotation.' : '⚠️ Previously annotated. Overwrite?', 'warning');
+                prefillForm(annotationToLoad);
+            } else {
+                displayMessage(IS_FILTER_MODE ? 'Error: Data missing.' : '', '');
+                resetForm();
+                applyDefaults();
+            }
+
+            prevBtn.disabled = currentItemIndex === 0;
+            nextBtn.disabled = currentItemIndex === jsonData.length - 1;
+        }
+
+        function displayMessage(message, type) {
+            statusMessageEl.textContent = message;
+            statusMessageEl.className = `status-message ${type}`;
+            statusMessageEl.style.display = message ? 'block' : 'none';
+        }
+
+        function getCheckedValues(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
+        }
+
+        async function saveAnnotation() {
+            if (jsonData.length === 0) return;
+
+            const item = jsonData[currentItemIndex];
+
+            // CRITICAL: In Filter Mode, we must save back to the SPECIFIC file the item came from.
+            const targetJsonFile = item.jsonFileName || JSON_FILE_NAME;
+
+            const isSpamValue = document.querySelector('input[name="is_spam"]:checked')?.value || '';
+            const annotationData = {
+                jsonFileName: targetJsonFile,
+                id: item.id,
+                is_spam: isSpamValue,
+                ad_category: isSpamValue === 'True' ? [] : getCheckedValues('ad_category'),
+                ad_category_other: isSpamValue === 'True' ? '' : document.getElementById('ad-category-other').value,
+                app_name: isSpamValue === 'True' ? [] : getCheckedValues('app_name'),
+                app_name_other: isSpamValue === 'True' ? '' : document.getElementById('app-name-other').value,
+                primary_messaging_strategy: isSpamValue === 'True' ? [] : getCheckedValues('primary_messaging_strategy'),
+                potentially_harmful_narratives: isSpamValue === 'True' ? [] : getCheckedValues('potentially_harmful_narratives'),
+                media_authenticity: isSpamValue === 'True' ? [] : getCheckedValues('media_authenticity'),
+                sexual_content: isSpamValue === 'True' ? '' : (document.querySelector('input[name="sexual_content"]:checked')?.value || ''),
+                ad_notes: isSpamValue === 'True' ? '' : document.getElementById('ad-notes').value
+            };
+
+            try {
+                const response = await fetch('/api/save_annotation', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(annotationData)
+                });
+                if (!response.ok) throw new Error(await response.text());
+
+                // Update Local State so UI reflects changes
+                // Flatten the lists to strings to match CSV/Server format for local caching
+                const flatData = { ...annotationData };
+                for (const key in flatData) if (Array.isArray(flatData[key])) flatData[key] = flatData[key].join(';');
+
+                if (IS_FILTER_MODE) {
+                    item.existing_annotation = flatData;
+                } else {
+                    existingAnnotations[item.id] = flatData;
+                }
+
+                displayMessage('Annotation saved!', 'success');
+
+                setTimeout(() => {
+                    if (jsonData.length > 1) {
+                        if (currentItemIndex < jsonData.length - 1) {
+                            nextBtn.click();
+                        } else {
+                            displayMessage("End of batch reached!", "success");
+                        }
+                    } else if (jsonData.length === 1 && IS_REMAINING_MODE) {
+                        displayMessage("Last remaining item saved! Refresh page to verify.", "success");
+                    }
+                }, 300);
+            } catch (error) { displayMessage(`Error: ${error.message}`, 'error'); }
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentItemIndex > 0) {
+                currentItemIndex--;
+                if (!IS_REMAINING_MODE && !IS_FILTER_MODE) localStorage.setItem(`lastAnnotationIndex_${JSON_FILE_NAME}`, currentItemIndex);
+                displayCurrentItem();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentItemIndex < jsonData.length - 1) {
+                currentItemIndex++;
+                if (!IS_REMAINING_MODE && !IS_FILTER_MODE) localStorage.setItem(`lastAnnotationIndex_${JSON_FILE_NAME}`, currentItemIndex);
+                displayCurrentItem();
+            }
+        });
+
+        submitBtn.addEventListener('click', saveAnnotation);
+
+        document.addEventListener('keydown', (event) => {
+            const isTyping = event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA';
+
+            // 1. Submit Shortcut (Ctrl+S) - works everywhere
+            if ((event.ctrlKey || event.metaKey) && (event.key === 's' || event.key === 'S')) {
+                event.preventDefault(); submitBtn.click(); return;
+            }
+
+            // 2. Preset Number Shortcuts (Only if NOT typing in a field)
+            if (!isTyping && /^\d$/.test(event.key)) {
+                const digit = event.key;
+                if (shortcutTimer) clearTimeout(shortcutTimer);
+                shortcutKeyBuffer += digit;
+
+                const potentialPrefix = parseInt(shortcutKeyBuffer, 10) * 10;
+                const canBePrefix = potentialPrefix <= totalPresets;
+
+                if (canBePrefix) {
+                    shortcutTimer = setTimeout(() => {
+                        const index = parseInt(shortcutKeyBuffer, 10);
+                        if (presetShortcuts[index]) triggerPreset(presetShortcuts[index]);
+                        shortcutKeyBuffer = "";
+                    }, 350);
+                } else {
+                    const index = parseInt(shortcutKeyBuffer, 10);
+                    if (presetShortcuts[index]) triggerPreset(presetShortcuts[index]);
+                    shortcutKeyBuffer = "";
+                }
+                return;
+            }
+
+            // 3. Navigation Shortcuts (Only if NOT typing)
+            if (!isTyping) {
+                if (event.key === 'ArrowLeft') prevBtn.click();
+                else if (event.key === 'ArrowRight') nextBtn.click();
+                else if (event.key === 'Enter') submitBtn.click();
+            }
+        });
+
+        generatePresetButtons();
+
+        // --- INITIALIZATION SWITCH ---
+        if (IS_FILTER_MODE) {
+            initFilterMode();
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('id') && urlParams.get('file')) {
+                fetchSingleItemData(urlParams.get('id'), urlParams.get('file'));
+            } else {
+                fetchAllItemsData();
+            }
+        }
+    </script>
+</body>
+
+</html>

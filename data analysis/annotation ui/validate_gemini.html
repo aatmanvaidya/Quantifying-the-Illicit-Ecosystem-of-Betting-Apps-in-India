@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Validation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* --- PROGRESS BAR STYLES --- */
+        .progress-container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto 15px auto;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #progress-text {
+            text-align: center;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        #progress-bar-inner {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            flex: 1;
+            overflow: hidden;
+            /* prevents body scroll */
+            padding-bottom: 10px;
+        }
+
+        .panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* --- LEFT PANEL (MEDIA) --- */
+        .media-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .media-content {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .file-info {
+            background: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        /* --- RIGHT PANEL (DATA) --- */
+        .json-viewer {
+            flex: 1;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #ccc;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        .key {
+            color: #d63384;
+            font-weight: bold;
+        }
+
+        .string {
+            color: #0d6efd;
+        }
+
+        .number {
+            color: #198754;
+        }
+
+        .boolean {
+            color: #fd7e14;
+            font-weight: bold;
+        }
+
+        .null {
+            color: #adb5bd;
+        }
+
+        .validation-controls {
+            border-top: 2px solid #eee;
+            padding-top: 15px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-incorrect {
+            background-color: #dc3545;
+            color: white;
+            opacity: 0.8;
+        }
+
+        .btn-incorrect:hover {
+            opacity: 1;
+        }
+
+        .btn-incorrect.active {
+            background-color: #a71d2a;
+            opacity: 1;
+            border: 3px solid #333;
+        }
+
+        .btn-correct {
+            background-color: #28a745;
+            color: white;
+            opacity: 0.8;
+        }
+
+        .btn-correct:hover {
+            opacity: 1;
+        }
+
+        .btn-correct.active {
+            background-color: #1e7e34;
+            opacity: 1;
+            border: 3px solid #333;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-btn {
+            background-color: #007bff;
+            color: white;
+            flex: 0 0 100px;
+            /* Fixed width */
+        }
+
+        .nav-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-overlay">Loading Validation Data...</div>
+
+    <div class="progress-container">
+        <span id="progress-text">Loading...</span>
+        <div class="progress-bar">
+            <div id="progress-bar-inner"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="media-container" id="media-wrapper">
+            </div>
+            <div class="file-info">
+                <strong>Source:</strong> <span id="source-name"></span><br>
+                <strong>File:</strong> <span id="file-name"></span>
+            </div>
+
+            <div class="nav-controls">
+                <button class="nav-btn" id="prev-btn">Previous</button>
+                <button class="nav-btn" id="next-btn">Next</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3 style="margin-top:0;">Gemini Response</h3>
+            <div id="json-viewer" class="json-viewer"></div>
+
+            <div class="validation-controls">
+                <div class="button-row">
+                    <button id="btn-incorrect" class="btn-incorrect" onclick="submitResult('Incorrect')">Incorrect
+                        ❌</button>
+                    <button id="btn-correct" class="btn-correct" onclick="submitResult('Correct')">Correct ✅</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allItems = [];
+        let currentIndex = 0;
+
+        const mediaWrapper = document.getElementById('media-wrapper');
+        const jsonViewer = document.getElementById('json-viewer');
+        const sourceNameEl = document.getElementById('source-name');
+        const fileNameEl = document.getElementById('file-name');
+
+        const progressBarInner = document.getElementById('progress-bar-inner');
+        const progressText = document.getElementById('progress-text');
+
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        const btnCorrect = document.getElementById('btn-correct');
+        const btnIncorrect = document.getElementById('btn-incorrect');
+
+        window.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            try {
+                const res = await fetch('/api/get_validation_batch');
+                const data = await res.json();
+                allItems = data.items;
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                if (allItems.length > 0) {
+                    // Try to find first unvalidated item to start there
+                    const firstUnvalidated = allItems.findIndex(item => !item.existing_validation);
+                    currentIndex = firstUnvalidated !== -1 ? firstUnvalidated : 0;
+                    render();
+                } else {
+                    alert("No items found.");
+                }
+            } catch (e) {
+                alert("Error loading data: " + e.message);
+            }
+        }
+
+        function render() {
+            const item = allItems[currentIndex];
+
+            // 1. Update Progress
+            const doneCount = allItems.filter(i => i.existing_validation).length;
+            const pct = (doneCount / allItems.length) * 100;
+            progressBarInner.style.width = `${pct}%`;
+            progressText.innerText = `Item ${currentIndex + 1} of ${allItems.length} (Validated: ${doneCount})`;
+
+            // 2. Render Media
+            mediaWrapper.innerHTML = '';
+            const ext = item.file_name.split('.').pop().toLowerCase();
+            if (['mp4', 'mov', 'webm'].includes(ext)) {
+                const vid = document.createElement('video');
+                vid.src = item.web_url;
+                vid.className = 'media-content';
+                vid.controls = true;
+                vid.autoplay = true;
+                vid.muted = true;
+                mediaWrapper.appendChild(vid);
+            } else {
+                const img = document.createElement('img');
+                img.src = item.web_url;
+                img.className = 'media-content';
+                mediaWrapper.appendChild(img);
+            }
+
+            // 3. Render Info & JSON
+            sourceNameEl.innerText = item._source_json;
+            fileNameEl.innerText = item.file_name;
+
+            // Highlight existing state
+            const existing = item.existing_validation;
+
+            // Reset UI
+            btnCorrect.classList.remove('active');
+            btnIncorrect.classList.remove('active');
+
+            if (existing) {
+                if (existing.validation_status === 'Correct') {
+                    btnCorrect.classList.add('active');
+                } else {
+                    btnIncorrect.classList.add('active');
+                }
+            }
+
+            // Show clean JSON (annotations only usually relevant)
+            const dataToShow = item.annotations || item;
+            jsonViewer.innerHTML = syntaxHighlight(dataToShow);
+
+            // 4. Update Nav Buttons
+            prevBtn.disabled = (currentIndex === 0);
+            nextBtn.disabled = (currentIndex === allItems.length - 1);
+        }
+
+        async function submitResult(status) {
+            const item = allItems[currentIndex];
+
+            // Update UI State immediately
+            if (status === 'Correct') {
+                btnCorrect.classList.add('active');
+                btnIncorrect.classList.remove('active');
+            } else {
+                btnCorrect.classList.remove('active');
+                btnIncorrect.classList.add('active');
+            }
+
+            // Update Local Data
+            item.existing_validation = {
+                validation_status: status,
+                correction_notes: "", // Always empty now
+                source_json: item._source_json,
+                file_name: item.file_name
+            };
+
+            // Send to Server
+            const payload = {
+                file_name: item.file_name,
+                source_json: item._source_json,
+                validation_status: status,
+                correction_notes: ""
+            };
+
+            try {
+                await fetch('/api/save_validation_result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // Auto-advance if not at end
+                if (currentIndex < allItems.length - 1) {
+                    setTimeout(() => {
+                        currentIndex++;
+                        render();
+                    }, 200);
+                } else {
+                    render(); // Update progress bar
+                    alert("Batch complete!");
+                }
+            } catch (e) {
+                alert("Failed to save: " + e.message);
+            }
+        }
+
+        // --- Event Listeners ---
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) { currentIndex--; render(); }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < allItems.length - 1) { currentIndex++; render(); }
+        });
+
+        // Syntax Highlight Helper
+        function syntaxHighlight(json) {
+            if (typeof json != 'string') json = JSON.stringify(json, undefined, 2);
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) cls = 'key';
+                    else cls = 'string';
+                } else if (/true|false/.test(match)) cls = 'boolean';
+                else if (/null/.test(match)) cls = 'null';
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevBtn.click();
+            if (e.key === 'ArrowRight') nextBtn.click();
+        });
+    </script>
+</body>
+
+</html>

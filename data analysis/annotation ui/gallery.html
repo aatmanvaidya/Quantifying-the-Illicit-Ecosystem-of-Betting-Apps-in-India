@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotated Gallery Review</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #444;
+            margin-bottom: 30px;
+        }
+
+        /* --- GRID STYLES --- */
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            border: 1px solid #ddd;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-color: #007bff;
+        }
+
+        .media-wrapper {
+            width: 100%;
+            height: 250px; /* Fixed height for uniformity */
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .media-wrapper img, .media-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures grid stays neat */
+        }
+
+        .item-info {
+            padding: 10px;
+            font-size: 0.85em;
+            color: #666;
+            background: #fff;
+            border-top: 1px solid #eee;
+        }
+
+        .item-id {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .file-tag {
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+
+        /* --- MODAL STYLES --- */
+        #filter-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .filter-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 450px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .filter-box h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            color: #28a745;
+        }
+
+        .filter-box label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .filter-box select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background-color: #28a745;
+            color: white;
+            padding: 12px;
+            border: none;
+            width: 100%;
+            margin-top: 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #218838;
+        }
+        
+        #loading-msg {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 50px;
+            display: none;
+        }
+        
+        .no-results {
+            text-align: center;
+            color: #777;
+            margin-top: 50px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="filter-modal">
+        <div class="filter-box">
+            <h2>Non-Spam Gallery Filter</h2>
+            <p style="color: #666; font-size: 0.9em;">Select criteria to view your previously annotated items (where Is Spam = False).</p>
+
+            <label>Ad Category:</label>
+            <select id="f-category">
+                <option value="All">All Categories</option>
+                <option value="Sports Betting">Sports Betting</option>
+                <option value="Fantasy Sports">Fantasy Sports</option>
+                <option value="Casino Games">Casino Games</option>
+                <option value="Card Games">Card Games</option>
+                <option value="Prediction Games">Prediction Games</option>
+                <option value="Lottery / Jackpots">Lottery / Jackpots</option>
+                <option value="Trading / Crypto">Trading / Crypto</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label>Media Authenticity:</label>
+            <select id="f-authenticity">
+                <option value="All">All Types</option>
+                <option value="Authentic">Authentic</option>
+                <option value="Manipulated">Manipulated</option>
+                <option value="AI-Generated (Synthetic Media)">AI-Generated</option>
+                <option value="Deepfake (Celebrity)">Deepfake (Celebrity)</option>
+                <option value="Deepfake (Non-Celebrity)">Deepfake (Non-Celebrity)</option>
+            </select>
+
+            <label>Media Type:</label>
+            <select id="f-media-type">
+                <option value="All">All</option>
+                <option value="image">Images</option>
+                <option value="video">Videos</option>
+            </select>
+
+            <button id="load-gallery-btn" class="btn-primary">Load Gallery</button>
+        </div>
+    </div>
+
+    <h1 id="gallery-title">Annotated Media Gallery</h1>
+    
+    <div id="loading-msg">Scanning CSVs and JSONs... please wait...</div>
+    <div id="gallery-container" class="gallery-container"></div>
+
+    <script>
+        const MEDIA_FOLDER = "/scams-media/output";
+        const btn = document.getElementById('load-gallery-btn');
+        const modal = document.getElementById('filter-modal');
+        const container = document.getElementById('gallery-container');
+        const loadingMsg = document.getElementById('loading-msg');
+        const titleEl = document.getElementById('gallery-title');
+
+        btn.addEventListener('click', async () => {
+            const category = document.getElementById('f-category').value;
+            const auth = document.getElementById('f-authenticity').value;
+            const type = document.getElementById('f-media-type').value;
+
+            // Update UI
+            btn.disabled = true;
+            btn.textContent = "Loading...";
+            
+            try {
+                // Fetch data
+                const response = await fetch('/api/get_gallery_items', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ad_category: category,
+                        media_authenticity: auth,
+                        media_type: type
+                    })
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch gallery items");
+                
+                const items = await response.json();
+
+                // Render
+                renderGallery(items, category, auth, type);
+                
+                // Close modal
+                modal.style.display = 'none';
+
+            } catch (e) {
+                alert("Error: " + e.message);
+                btn.disabled = false;
+                btn.textContent = "Load Gallery";
+            }
+        });
+
+        function renderGallery(items, cat, auth, type) {
+            container.innerHTML = '';
+            
+            // Update Title with counts
+            titleEl.innerHTML = `Gallery: <strong>${items.length}</strong> items found<br><span style="font-size:0.6em; font-weight:normal">(${cat} | ${auth} | ${type})</span>`;
+
+            if (items.length === 0) {
+                container.innerHTML = '<div class="no-results">No annotated items found matching these filters.</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                // Create Item Card
+                const card = document.createElement('div');
+                card.className = 'gallery-item';
+                
+                // Determine Media Path
+                const mediaSubfolder = item.jsonFileName.replace('.json', '');
+                const extension = item.media_type === 'image' ? 'png' : 'mp4';
+                const mediaPath = `${MEDIA_FOLDER}/${mediaSubfolder}/${item.id}.${extension}`;
+
+                // Create Media Element
+                const mediaWrapper = document.createElement('div');
+                mediaWrapper.className = 'media-wrapper';
+
+                if (item.media_type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = mediaPath;
+                    img.loading = "lazy"; // Performance optimization
+                    mediaWrapper.appendChild(img);
+                } else {
+                    const vid = document.createElement('video');
+                    vid.src = mediaPath;
+                    vid.muted = true;
+                    // We don't autoplay to save performance on large grids, just show poster/first frame
+                    // adding onmouseover play could be cool
+                    vid.onmouseover = () => vid.play();
+                    vid.onmouseout = () => { vid.pause(); vid.currentTime = 0; };
+                    mediaWrapper.appendChild(vid);
+                }
+
+                // Create Info Section
+                const info = document.createElement('div');
+                info.className = 'item-info';
+                info.innerHTML = `
+                    <span class="item-id">${item.id}</span>
+                    <span class="file-tag">${item.jsonFileName}</span>
+                `;
+
+                card.appendChild(mediaWrapper);
+                card.appendChild(info);
+
+                // CLICK EVENT: Go to annotation page
+                card.addEventListener('click', () => {
+                    // Open in same tab or new tab? Let's do new tab so gallery stays open
+                    window.open(`/?id=${item.id}&file=${item.jsonFileName}`, '_blank');
+                });
+
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
