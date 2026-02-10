@@ -4,7 +4,7 @@ Online betting and gambling apps in India have expanded rapidly, alongside growi
 
 ## Project Structure
 
-- `data/`: Contains the datasets used in the study (Meta ads, Instagram posts, Google Play Store reviews). All data is publicly available, except for media items from Meta Ads. Access to these can be requested by contacting us at [aatmanvaidya@gmail.com](aatmanvaidya@gmail.com).
+- `data/`: Contains the datasets used in the study (Meta ads, Instagram posts, Google Play Store reviews). All data is publicly available, except for media items from Meta Ads. Access to these can be requested by contacting us at [aatmanvaidya@gmail.com](mailto:aatmanvaidya@gmail.com).
 - `data collection/`: Scripts and notebooks for collecting/scraping data from various sources.
 - `data analysis/`: Code for analyzing the collected data, including topic modeling, qualitative annotation and few-shot classification.
 - `pyproject.toml`: Project metadata and dependencies.
